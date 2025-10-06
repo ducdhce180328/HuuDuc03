@@ -1,0 +1,1418 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Trung Thu</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Mali:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;1,200;1,300;1,400;1,500;1,600;1,700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --accent: #ff7f50;
+            --accent-2: #ff5722;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: "Mali", cursive;
+            background: #060614;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            /* Tối ưu cho mobile */
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            /* Cải thiện performance */
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+
+        .stage {
+            position: relative;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        canvas#starfield {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            /* Tối ưu GPU acceleration */
+            transform: translateZ(0);
+            will-change: contents;
+            /* Responsive cho mobile */
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: optimize-contrast;
+        }
+
+        .moon {
+            position: fixed;
+            top: 60px;
+            right: 100px;
+            width: 160px;
+            height: 160px;
+            background: radial-gradient(circle at 30% 30%, #fff, #f8f8f8 70%, #e0e0e0 100%);
+            border-radius: 50%;
+            /* sửa lỗi typo trong box-shadow */
+            box-shadow:
+                0 0 50px #ffffff7a,
+                0 0 80px rgba(255, 255, 255, 0.7),
+                0 0 100px rgba(255, 255, 255, 0.4);
+            filter: drop-shadow(0 0 25px rgba(255, 255, 200, 0.8));
+            animation: moonGlow 6s ease-in-out infinite;
+            z-index: 10;
+        }
+
+        /* Tạo khuôn mặt cho ông mặt trăng dễ thương */
+        .moon::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            background-image:
+                /* Mắt trái - to và có viền */
+                radial-gradient(circle at 38% 38%, #fff 12px, #333 12px, #333 15px, transparent 15px),
+                /* Mắt phải - to và có viền */
+                radial-gradient(circle at 62% 38%, #fff 12px, #333 12px, #333 15px, transparent 15px),
+                /* Đồng tử mắt trái */
+                radial-gradient(circle at 38% 38%, #333 6px, transparent 6px),
+                /* Đồng tử mắt phải */
+                radial-gradient(circle at 62% 38%, #333 6px, transparent 6px),
+                /* Ánh sáng trong mắt trái */
+                radial-gradient(circle at 36% 35%, #fff 2px, transparent 2px),
+                /* Ánh sáng trong mắt phải */
+                radial-gradient(circle at 60% 35%, #fff 2px, transparent 2px),
+                /* Má đỏ bên trái */
+                radial-gradient(circle at 25% 55%, #ff9999 8px, transparent 8px),
+                /* Má đỏ bên phải */
+                radial-gradient(circle at 75% 55%, #ff9999 8px, transparent 8px),
+                /* Miệng cười dễ thương */
+                radial-gradient(ellipse 35px 18px at 50% 68%, transparent 12px, #d2691e 12px, #d2691e 15px, transparent 15px);
+            background-size:
+                30px 30px, 30px 30px,
+                12px 12px, 12px 12px,
+                4px 4px, 4px 4px,
+                16px 16px, 16px 16px,
+                70px 36px;
+            background-repeat: no-repeat;
+            background-position:
+                38% 38%, 62% 38%,
+                38% 38%, 62% 38%,
+                36% 35%, 60% 35%,
+                25% 55%, 75% 55%,
+                50% 68%;
+            border-radius: inherit;
+            animation: moonFace 4s ease-in-out infinite;
+        }
+
+        @keyframes moonGlow {
+
+            0%,
+            100% {
+                box-shadow:
+                    0 0 50px #ffffff7a,
+                    0 0 80px rgba(255, 255, 255, 0.7),
+                    0 0 100px rgba(255, 255, 255, 0.4);
+            }
+
+            50% {
+                box-shadow:
+                    0 0 60px #ffffff9a,
+                    0 0 100px rgba(255, 255, 255, 0.8),
+                    0 0 120px rgba(255, 255, 255, 0.5);
+            }
+        }
+
+        @keyframes moonFace {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.05);
+            }
+        }
+
+        /* CSS Responsive tối ưu cho các thiết bị */
+        /* Desktop và Laptop lớn */
+        @media (min-width: 1200px) {
+            .moon {
+                top: 80px;
+                right: 120px;
+                width: 180px;
+                height: 180px;
+            }
+
+            #hint {
+                font-size: 32px;
+                bottom: 120px;
+            }
+        }
+
+        /* Tablet ngang */
+        @media (max-width: 1199px) and (min-width: 992px) {
+            .moon {
+                top: 70px;
+                right: 80px;
+                width: 140px;
+                height: 140px;
+            }
+        }
+
+        /* Tablet dọc */
+        @media (max-width: 991px) and (min-width: 769px) {
+            .moon {
+                top: 50px;
+                right: 40px;
+                width: 100px;
+                height: 100px;
+            }
+        }
+
+        /* Mobile lớn */
+        @media (max-width: 768px) and (min-width: 481px) {
+            .moon {
+                top: 30px;
+                right: 20px;
+                width: 80px;
+                height: 80px;
+            }
+
+            .moon::before {
+                background-image:
+                    /* Mắt trái - nhỏ hơn cho mobile */
+                    radial-gradient(circle at 38% 38%, #fff 6px, #333 6px, #333 7px, transparent 7px),
+                    /* Mắt phải - nhỏ hơn cho mobile */
+                    radial-gradient(circle at 62% 38%, #fff 6px, #333 6px, #333 7px, transparent 7px),
+                    /* Đồng tử mắt trái */
+                    radial-gradient(circle at 38% 38%, #333 3px, transparent 3px),
+                    /* Đồng tử mắt phải */
+                    radial-gradient(circle at 62% 38%, #333 3px, transparent 3px),
+                    /* Ánh sáng trong mắt trái */
+                    radial-gradient(circle at 36% 35%, #fff 1px, transparent 1px),
+                    /* Ánh sáng trong mắt phải */
+                    radial-gradient(circle at 60% 35%, #fff 1px, transparent 1px),
+                    /* Má đỏ bên trái */
+                    radial-gradient(circle at 25% 55%, #ff9999 4px, transparent 4px),
+                    /* Má đỏ bên phải */
+                    radial-gradient(circle at 75% 55%, #ff9999 4px, transparent 4px),
+                    /* Miệng cười dễ thương */
+                    radial-gradient(ellipse 17px 9px at 50% 68%, transparent 6px, #d2691e 6px, #d2691e 7px, transparent 7px);
+                background-size:
+                    15px 15px, 15px 15px,
+                    6px 6px, 6px 6px,
+                    2px 2px, 2px 2px,
+                    8px 8px, 8px 8px,
+                    35px 18px;
+            }
+        }
+
+        /* Mobile nhỏ */
+        @media (max-width: 480px) {
+            .moon {
+                top: 20px;
+                right: 15px;
+                width: 60px;
+                height: 60px;
+            }
+
+            .moon::before {
+                background-image:
+                    /* Mắt trái - siêu nhỏ cho điện thoại */
+                    radial-gradient(circle at 38% 38%, #fff 4px, #333 4px, #333 5px, transparent 5px),
+                    /* Mắt phải - siêu nhỏ cho điện thoại */
+                    radial-gradient(circle at 62% 38%, #fff 4px, #333 4px, #333 5px, transparent 5px),
+                    /* Đồng tử mắt trái */
+                    radial-gradient(circle at 38% 38%, #333 2px, transparent 2px),
+                    /* Đồng tử mắt phải */
+                    radial-gradient(circle at 62% 38%, #333 2px, transparent 2px),
+                    /* Ánh sáng trong mắt trái */
+                    radial-gradient(circle at 36% 35%, #fff 0.5px, transparent 0.5px),
+                    /* Ánh sáng trong mắt phải */
+                    radial-gradient(circle at 60% 35%, #fff 0.5px, transparent 0.5px),
+                    /* Má đỏ bên trái */
+                    radial-gradient(circle at 25% 55%, #ff9999 3px, transparent 3px),
+                    /* Má đỏ bên phải */
+                    radial-gradient(circle at 75% 55%, #ff9999 3px, transparent 3px),
+                    /* Miệng cười dễ thương */
+                    radial-gradient(ellipse 12px 6px at 50% 68%, transparent 4px, #d2691e 4px, #d2691e 5px, transparent 5px);
+                background-size:
+                    10px 10px, 10px 10px,
+                    4px 4px, 4px 4px,
+                    1px 1px, 1px 1px,
+                    6px 6px, 6px 6px,
+                    24px 12px;
+            }
+        }
+
+        #lantern-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        .lantern {
+            position: absolute;
+            pointer-events: auto;
+            width: 40px;
+            user-select: none;
+            cursor: pointer;
+            /* Tối ưu performance */
+            will-change: transform, opacity;
+            transform: translateZ(0);
+            /* Touch-friendly cho mobile */
+            touch-action: manipulation;
+        }
+
+        /* Responsive lantern sizes */
+        @media (min-width: 1200px) {
+            .lantern {
+                width: 50px;
+                /* Lớn hơn cho desktop */
+            }
+        }
+
+        @media (max-width: 768px) {
+            .lantern {
+                width: 35px;
+                /* Vừa phải cho tablet */
+            }
+        }
+
+        @media (max-width: 480px) {
+            .lantern {
+                width: 28px;
+                /* Nhỏ hơn cho mobile */
+            }
+        }
+
+        @keyframes swing {
+            0% {
+                transform: rotate(-5deg);
+            }
+
+            50% {
+                transform: rotate(5deg);
+            }
+
+            100% {
+                transform: rotate(-5deg);
+            }
+        }
+
+        .swing {
+            animation: swing 2s ease-in-out infinite;
+        }
+
+        #hint {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0);
+            color: #ffa722;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-size: 28px;
+            font-weight: 800;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            z-index: 1000;
+            pointer-events: none;
+            text-align: center;
+            white-space: nowrap;
+            text-shadow:
+                0 0 15px #ff8a50,
+                0 0 20px #ffd180;
+        }
+
+        /* Responsive hint text */
+        @media (min-width: 1200px) {
+            #hint {
+                font-size: 32px;
+                padding: 18px 30px;
+                bottom: 120px;
+            }
+        }
+
+        @media (max-width: 991px) and (min-width: 769px) {
+            #hint {
+                font-size: 26px;
+                padding: 14px 22px;
+                bottom: 90px;
+            }
+        }
+
+        @media (max-width: 768px) and (min-width: 481px) {
+            #hint {
+                font-size: 24px;
+                padding: 12px 20px;
+                bottom: 80px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #hint {
+                font-size: 18px;
+                padding: 8px 12px;
+                bottom: 50px;
+                /* Giảm text-shadow cho mobile */
+                text-shadow:
+                    0 0 10px #ff8a50,
+                    0 0 15px #ffd180;
+            }
+        }
+
+        /* Ultra small mobile */
+        @media (max-width: 360px) {
+            #hint {
+                font-size: 16px;
+                padding: 6px 10px;
+                bottom: 40px;
+            }
+        }
+
+        #wish-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg,
+                    rgba(255, 255, 255, 0.98) 0%,
+                    rgba(255, 248, 220, 0.95) 50%,
+                    rgba(255, 255, 255, 0.98) 100%);
+            color: #ff8d22;
+            padding: 35px 40px;
+            border-radius: 20px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: none;
+            z-index: 9999;
+            box-shadow:
+                0 10px 40px rgba(0, 0, 0, 0.4),
+                0 0 30px #ff8a50,
+                0 0 50px #ffd180,
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            text-align: center;
+            max-width: 70%;
+            width: auto;
+            box-sizing: border-box;
+            pointer-events: auto;
+            text-shadow:
+                0 0 25px #ffd180,
+                0 2px 4px rgba(255, 141, 34, 0.3);
+            border: 2px solid rgba(255, 200, 100, 0.6);
+            backdrop-filter: blur(10px);
+            animation: popupAppear 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        /* Hiệu ứng xuất hiện với bounce */
+        @keyframes popupAppear {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.3) rotate(-10deg);
+                filter: blur(10px);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: translate(-50%, -50%) scale(1.1) rotate(2deg);
+                filter: blur(2px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1) rotate(0deg);
+                filter: blur(0px);
+            }
+        }
+
+        /* Hiệu ứng biến mất */
+        @keyframes popupDisappear {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1) rotate(0deg);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5) rotate(5deg);
+                filter: blur(5px);
+            }
+        }
+
+        /* Hiệu ứng floating nhẹ nhàng khi hiển thị */
+        @keyframes popupFloat {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%) translateY(0px);
+            }
+
+            50% {
+                transform: translate(-50%, -50%) translateY(-8px);
+            }
+        }
+
+        /* Hiệu ứng shimmer cho text */
+        @keyframes textShimmer {
+            0% {
+                background-position: -200% center;
+            }
+
+            100% {
+                background-position: 200% center;
+            }
+        }
+
+        /* Hiệu ứng glow nhấp nháy cho border */
+        @keyframes borderGlow {
+
+            0%,
+            100% {
+                box-shadow:
+                    0 10px 40px rgba(0, 0, 0, 0.4),
+                    0 0 30px #ff8a50,
+                    0 0 50px #ffd180,
+                    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            }
+
+            50% {
+                box-shadow:
+                    0 10px 40px rgba(0, 0, 0, 0.4),
+                    0 0 50px #ff6b35,
+                    0 0 80px #ffcc70,
+                    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            }
+        }
+
+        /* Class để thêm hiệu ứng khi popup hiển thị */
+        #wish-popup.show {
+            animation:
+                popupAppear 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55),
+                popupFloat 3s ease-in-out infinite 0.6s,
+                borderGlow 2s ease-in-out infinite 1s;
+        }
+
+        /* Class để thêm hiệu ứng khi popup ẩn */
+        #wish-popup.hide {
+            animation: popupDisappear 0.4s ease-in forwards;
+        }
+
+        /* Hiệu ứng shimmer cho text */
+        #wish-popup.shimmer {
+            background: linear-gradient(135deg,
+                    rgba(255, 255, 255, 0.98) 0%,
+                    rgba(255, 248, 220, 0.95) 25%,
+                    rgba(255, 215, 0, 0.3) 50%,
+                    rgba(255, 248, 220, 0.95) 75%,
+                    rgba(255, 255, 255, 0.98) 100%);
+            background-size: 200% 100%;
+            animation:
+                popupAppear 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55),
+                textShimmer 2s linear infinite 0.8s,
+                popupFloat 3s ease-in-out infinite 0.6s,
+                borderGlow 2s ease-in-out infinite 1s;
+        }
+
+        /* Responsive popup */
+        @media (min-width: 1200px) {
+            #wish-popup {
+                font-size: 2.2rem;
+                padding: 45px 50px;
+                max-width: 60%;
+                border-radius: 25px;
+            }
+        }
+
+        @media (max-width: 991px) and (min-width: 769px) {
+            #wish-popup {
+                font-size: 1.6rem;
+                padding: 30px 35px;
+                max-width: 75%;
+                border-radius: 18px;
+            }
+        }
+
+        @media (max-width: 768px) and (min-width: 481px) {
+            #wish-popup {
+                font-size: 1.4rem;
+                padding: 25px 30px;
+                max-width: 85%;
+                border-radius: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #wish-popup {
+                font-size: 1.1rem;
+                padding: 18px 22px;
+                max-width: 92%;
+                border-radius: 12px;
+                /* Giảm hiệu ứng cho mobile */
+                text-shadow:
+                    0 0 15px #ffd180,
+                    0 1px 2px rgba(255, 141, 34, 0.3);
+            }
+        }
+
+        @media (max-width: 360px) {
+            #wish-popup {
+                font-size: 1rem;
+                padding: 15px 18px;
+                max-width: 95%;
+                border-radius: 10px;
+            }
+        }
+
+        /* Hiệu ứng pháo hoa khi di chuyển chuột */
+        .firework-particle {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 100;
+            animation: firework-explode 1s ease-out forwards;
+        }
+
+        @keyframes firework-explode {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            100% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+        }
+
+        .firework-spark {
+            position: fixed;
+            width: 2px;
+            height: 2px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 99;
+            animation: spark-fade 0.8s ease-out forwards;
+        }
+
+        @keyframes spark-fade {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            100% {
+                opacity: 0;
+                transform: scale(0);
+            }
+        }
+
+        /* Responsive cho pháo hoa trên mobile */
+        @media (max-width: 768px) {
+            .firework-particle {
+                width: 3px;
+                height: 3px;
+            }
+
+            .firework-spark {
+                width: 1.5px;
+                height: 1.5px;
+            }
+        }
+
+        /* Preload để tránh lag */
+        .lantern {
+            will-change: transform;
+        }
+
+        .moon {
+            will-change: transform;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="stage">
+        <canvas id="starfield"></canvas>
+        <div class="moon" aria-hidden="true"></div>
+        <div id="lantern-container"></div>
+        <div id="wish-popup" role="dialog" aria-live="polite"></div>
+
+
+        <!-- Nhạc nền -->
+        <audio id="bg-music" loop preload="auto">
+            <source src="a.mp3" type="audio/mpeg">
+            Trình duyệt của bạn không hỗ trợ thẻ audio.
+        </audio>
+    </div>
+
+    <script>
+        // ===== Canvas sao và sao băng =====
+        const canvas = document.getElementById("starfield");
+        const ctx = canvas.getContext("2d");
+        let w, h, stars = [], meteors = [];
+
+        function resizeCanvas() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+            stars = [];
+
+            // Tối ưu số lượng sao dựa trên kích thước màn hình và thiết bị
+            let divisor = 2200; // Desktop default
+
+            // Giảm số lượng sao trên mobile để tối ưu performance
+            if (window.innerWidth <= 480) {
+                divisor = 3500; // Mobile nhỏ
+            } else if (window.innerWidth <= 768) {
+                divisor = 3000; // Mobile lớn
+            } else if (window.innerWidth <= 1024) {
+                divisor = 2500; // Tablet
+            }
+
+            // Detect mobile device
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (isMobile) {
+                divisor *= 1.5; // Giảm thêm 50% cho mobile
+            }
+
+            const count = Math.round((w * h) / divisor);
+            for (let i = 0; i < count; i++) {
+                stars.push({
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    r: Math.random() * 0.9 + 0.1,
+                    a: Math.random() * 0.8 + 0.2,
+                    t: Math.random() * 0.02 + 0.002
+                });
+            }
+        }
+
+        function drawStars() {
+            ctx.clearRect(0, 0, w, h);
+            for (const s of stars) {
+                s.a += (Math.random() > 0.5 ? 1 : -1) * s.t;
+                s.a = Math.max(0.05, Math.min(1, s.a));
+                ctx.beginPath();
+                ctx.globalAlpha = s.a;
+                ctx.fillStyle = "#fff";
+                ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        function createMeteor() {
+            const startX = Math.random() * w;
+            const startY = Math.random() * (h / 3);
+            const speed = Math.random() * 10 + 6;
+            meteors.push({
+                x: startX,
+                y: startY,
+                vx: speed + 6,
+                vy: speed / 2,
+                len: Math.random() * 120 + 100,
+                a: 1
+            });
+        }
+
+        function drawMeteors() {
+            for (let i = meteors.length - 1; i >= 0; i--) {
+                const m = meteors[i];
+                const x2 = m.x - m.len;
+                const y2 = m.y - m.len / 2;
+                const g = ctx.createLinearGradient(m.x, m.y, x2, y2);
+                g.addColorStop(0, `rgba(255,255,255,${m.a})`);
+                g.addColorStop(1, "rgba(255,255,255,0)");
+                ctx.strokeStyle = g;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(m.x, m.y);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+                m.x += m.vx;
+                m.y += m.vy;
+                m.a -= 0.02;
+                if (m.a <= 0 || m.x > w + 200 || m.y > h + 200) meteors.splice(i, 1);
+            }
+        }
+
+        function loop() {
+            drawStars();
+            drawMeteors();
+            if (Math.random() < 0.01) createMeteor();
+            requestAnimationFrame(loop);
+        }
+
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+        loop();
+
+        // ===== Đèn lồng và lời chúc =====
+        const lanternContainer = document.getElementById("lantern-container");
+        const wishes = [
+            "🌙 Chúc bạn Trung Thu ấm áp, hạnh phúc! 🏮",
+            "🌕 Mùa trăng an lành và ngọt ngào! 🥮",
+            "⭐ Chúc bạn luôn sáng như trăng rằm! 🌟",
+            "🎆 Mong ước thành hiện thực nhé! 💫"
+        ];
+
+        function createLantern() {
+            const lantern = document.createElement("img");
+            lantern.src = "./den.png";
+            lantern.className = "lantern swing";
+            lantern.alt = "Đèn lồng Trung Thu";
+
+            const layer = Math.floor(Math.random() * 3) + 1;
+            let size, duration, opacity;
+
+            if (layer === 1) {
+                size = 20 + Math.random() * 20;
+                duration = 14000 + Math.random() * 5000;
+                opacity = 0.5;
+            } else if (layer === 2) {
+                size = 30 + Math.random() * 30;
+                duration = 12000 + Math.random() * 4000;
+                opacity = 0.7;
+            } else {
+                size = 40 + Math.random() * 40;
+                duration = 10000 + Math.random() * 3000;
+                opacity = 0.95;
+            }
+
+            // Responsive size dựa trên breakpoints
+            if (window.innerWidth >= 1200) {
+                size *= 1.2; // Desktop lớn
+            } else if (window.innerWidth <= 768 && window.innerWidth > 480) {
+                size *= 0.75; // Tablet/Mobile lớn
+            } else if (window.innerWidth <= 480) {
+                size *= 0.6; // Mobile nhỏ
+            }
+
+            lantern.style.width = size + "px";
+            lantern.style.left = Math.random() * 90 + "vw";
+            lantern.style.bottom = "0px";
+            lantern.style.opacity = opacity;
+
+            lanternContainer.appendChild(lantern);
+
+            const drift = Math.random() * 140 - 70;
+            const up = 120 + Math.random() * 40;
+
+            lantern.animate([
+                { transform: "translate(0,0)", opacity: opacity },
+                { transform: `translate(${drift}px, -${up}vh)`, opacity: 0 }
+            ], {
+                duration: duration,
+                easing: "linear",
+                fill: "forwards"
+            });
+
+            setTimeout(() => {
+                if (lantern.parentNode) {
+                    lantern.remove();
+                }
+            }, duration);
+
+            lantern.addEventListener("click", (e) => {
+                e.stopPropagation();
+                showWish();
+            });
+
+            // Error handling cho hình ảnh
+            lantern.addEventListener("error", () => {
+                lantern.style.background = "#ff6b35";
+                lantern.style.borderRadius = "50% 50% 50% 50% / 60% 60% 40% 40%";
+            });
+        }
+
+        function showWish() {
+            const wishPopup = document.getElementById("wish-popup");
+            const randomWish = wishes[Math.floor(Math.random() * wishes.length)];
+
+            // Reset classes
+            wishPopup.className = '';
+            wishPopup.textContent = randomWish;
+            wishPopup.style.display = "block";
+
+            // Thêm hiệu ứng ngẫu nhiên
+            const effects = ['show', 'shimmer'];
+            const randomEffect = effects[Math.floor(Math.random() * effects.length)];
+
+            // Delay nhỏ để đảm bảo display được set trước
+            setTimeout(() => {
+                wishPopup.classList.add(randomEffect);
+            }, 10);
+
+            // Tạo hiệu ứng particles xung quanh popup
+            createWishParticles();
+
+            // Tự động ẩn sau 4 giây với hiệu ứng
+            setTimeout(() => {
+                hideWish();
+            }, 4000);
+        }
+
+        function hideWish() {
+            const wishPopup = document.getElementById("wish-popup");
+            if (wishPopup.style.display === "block") {
+                wishPopup.classList.remove('show', 'shimmer');
+                wishPopup.classList.add('hide');
+
+                // Ẩn hoàn toàn sau khi animation kết thúc
+                setTimeout(() => {
+                    wishPopup.style.display = "none";
+                    wishPopup.classList.remove('hide');
+                }, 400);
+            }
+        }
+
+        function createWishParticles() {
+            const colors = ['#ffd700', '#ffeb3b', '#ff9800', '#ff5722', '#e91e63'];
+            const popup = document.getElementById("wish-popup");
+            const rect = popup.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            // Responsive particle count
+            let particleCount = 15; // Desktop default
+            if (window.innerWidth <= 480) {
+                particleCount = 8; // Mobile nhỏ
+            } else if (window.innerWidth <= 768) {
+                particleCount = 12; // Mobile lớn
+            }
+
+            // Tạo particles xung quanh popup
+            for (let i = 0; i < particleCount; i++) {
+                setTimeout(() => {
+                    const particle = document.createElement('div');
+                    particle.style.position = 'fixed';
+                    particle.style.width = '6px';
+                    particle.style.height = '6px';
+                    particle.style.borderRadius = '50%';
+                    particle.style.pointerEvents = 'none';
+                    particle.style.zIndex = '10000';
+
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    particle.style.backgroundColor = color;
+                    particle.style.boxShadow = `0 0 10px ${color}`;
+
+                    // Vị trí ban đầu xung quanh popup
+                    const angle = (Math.PI * 2 * i) / 15;
+                    const startRadius = 60;
+                    const startX = centerX + Math.cos(angle) * startRadius;
+                    const startY = centerY + Math.sin(angle) * startRadius;
+
+                    particle.style.left = startX + 'px';
+                    particle.style.top = startY + 'px';
+
+                    document.body.appendChild(particle);
+
+                    // Animation bay ra xa
+                    const endRadius = 150 + Math.random() * 100;
+                    const endX = centerX + Math.cos(angle) * endRadius;
+                    const endY = centerY + Math.sin(angle) * endRadius;
+
+                    particle.animate([
+                        {
+                            transform: 'translate(0, 0) scale(1)',
+                            opacity: 1
+                        },
+                        {
+                            transform: `translate(${endX - startX}px, ${endY - startY}px) scale(0)`,
+                            opacity: 0
+                        }
+                    ], {
+                        duration: 1000 + Math.random() * 500,
+                        easing: 'cubic-bezier(0.4, 0.0, 0.2, 1)'
+                    });
+
+                    // Xóa particle
+                    setTimeout(() => {
+                        if (particle.parentNode) {
+                            particle.parentNode.removeChild(particle);
+                        }
+                    }, 1500);
+                }, i * 50);
+            }
+        }
+
+        // Tạo đèn lồng định kỳ - responsive interval
+        const lanternInterval = window.innerWidth <= 768 ? 1000 : 800;
+        setInterval(createLantern, lanternInterval);
+
+        // ===== Nhạc nền =====
+        const bgMusic = document.getElementById("bg-music");
+        const hint = document.getElementById("hint");
+        let musicStarted = false;
+
+        function startMusic() {
+            if (!musicStarted && bgMusic) {
+                bgMusic.volume = 0;
+                bgMusic.play().then(() => {
+                    let v = 0;
+                    const fadeIn = setInterval(() => {
+                        v += 0.05;
+                        if (v >= 0.6) {  // Giảm âm lượng để không quá to
+                            v = 0.6;
+                            clearInterval(fadeIn);
+                        }
+                        bgMusic.volume = v;
+                    }, 120);
+                    musicStarted = true;
+
+                    // Tạo một vài đèn lồng ban đầu
+                    for (let i = 0; i < 3; i++) {
+                        setTimeout(createLantern, i * 400);
+                    }
+                }).catch(() => {
+                    console.log("Không thể phát nhạc tự động");
+                });
+            }
+        }
+
+        // Bắt đầu nhạc khi user tương tác
+        document.addEventListener("pointerdown", startMusic, { once: true });
+        document.addEventListener("click", startMusic, { once: true });
+
+        // ===== Hiển thị lời chúc khi click vào màn hình =====
+        document.addEventListener("click", (e) => {
+            const popup = document.getElementById("wish-popup");
+
+            // Nếu popup đang hiển thị và click bên ngoài popup, thì ẩn popup
+            if (popup && popup.style.display === "block" && !popup.contains(e.target)) {
+                hideWish();
+            }
+            // Nếu popup không hiển thị, thì hiển thị lời chúc khi click vào bất kỳ đâu
+            else if (popup && popup.style.display !== "block") {
+                showWish();
+            }
+        });
+
+        // ===== Hiển thị gợi ý =====
+        setTimeout(() => {
+            if (hint) {
+                hint.style.opacity = "1";
+            }
+            setTimeout(() => {
+                if (hint) {
+                    hint.style.opacity = "0";
+                }
+            }, 4000);
+        }, 1500);
+
+        // ===== Hiệu ứng pháo hoa khi di chuyển chuột =====
+        let mouseTrail = [];
+        let isMouseMoving = false;
+        let mouseTimeout;
+
+        function createFirework(x, y) {
+            const colors = [
+                '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4',
+                '#ffeaa7', '#dda0dd', '#98d8c8', '#f7b731',
+                '#ff7675', '#74b9ff', '#a29bfe', '#fd79a8'
+            ];
+
+            // Điều chỉnh số lượng hạt dựa trên kích thước màn hình
+            const particleCount = window.innerWidth <= 768 ? 8 : 12;
+
+            // Tạo nhiều hạt pháo hoa
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'firework-particle';
+
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.backgroundColor = color;
+                particle.style.boxShadow = `0 0 10px ${color}`;
+
+                // Vị trí ban đầu
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+
+                // Hướng bay ngẫu nhiên
+                const angle = (i / particleCount) * Math.PI * 2;
+                const velocity = window.innerWidth <= 768 ? 30 + Math.random() * 60 : 50 + Math.random() * 100;
+                const endX = x + Math.cos(angle) * velocity;
+                const endY = y + Math.sin(angle) * velocity;
+
+                document.body.appendChild(particle);
+
+                // Animation bay ra
+                particle.animate([
+                    {
+                        transform: 'translate(0, 0) scale(1)',
+                        opacity: 1
+                    },
+                    {
+                        transform: `translate(${endX - x}px, ${endY - y}px) scale(0.3)`,
+                        opacity: 0
+                    }
+                ], {
+                    duration: 800 + Math.random() * 400,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                });
+
+                // Xóa particle sau khi animation kết thúc
+                setTimeout(() => {
+                    if (particle.parentNode) {
+                        particle.parentNode.removeChild(particle);
+                    }
+                }, 1200);
+            }
+
+            // Thêm hiệu ứng tia lửa nhỏ
+            const sparkCount = window.innerWidth <= 768 ? 5 : 8;
+            for (let i = 0; i < sparkCount; i++) {
+                setTimeout(() => {
+                    createSpark(x + (Math.random() - 0.5) * 20, y + (Math.random() - 0.5) * 20);
+                }, Math.random() * 200);
+            }
+        }
+
+        function createSpark(x, y) {
+            const spark = document.createElement('div');
+            spark.className = 'firework-spark';
+
+            const colors = ['#ffffff', '#ffff00', '#ffa500', '#ff6347'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            spark.style.backgroundColor = color;
+            spark.style.boxShadow = `0 0 6px ${color}`;
+
+            spark.style.left = x + 'px';
+            spark.style.top = y + 'px';
+
+            document.body.appendChild(spark);
+
+            // Animation cho tia lửa
+            const angle = Math.random() * Math.PI * 2;
+            const distance = window.innerWidth <= 768 ? 15 + Math.random() * 20 : 20 + Math.random() * 30;
+            const endX = x + Math.cos(angle) * distance;
+            const endY = y + Math.sin(angle) * distance;
+
+            spark.animate([
+                {
+                    transform: 'translate(0, 0)',
+                    opacity: 1
+                },
+                {
+                    transform: `translate(${endX - x}px, ${endY - y}px)`,
+                    opacity: 0
+                }
+            ], {
+                duration: 600,
+                easing: 'ease-out'
+            });
+
+            setTimeout(() => {
+                if (spark.parentNode) {
+                    spark.parentNode.removeChild(spark);
+                }
+            }, 600);
+        }
+
+        // Lắng nghe sự kiện di chuyển chuột
+        document.addEventListener('mousemove', (e) => {
+            const currentTime = Date.now();
+
+            // Thêm vị trí chuột vào trail
+            mouseTrail.push({
+                x: e.clientX,
+                y: e.clientY,
+                time: currentTime
+            });
+
+            // Giữ chỉ 5 vị trí gần nhất
+            if (mouseTrail.length > 5) {
+                mouseTrail.shift();
+            }
+
+            // Kiểm tra tốc độ di chuyển
+            if (mouseTrail.length >= 2) {
+                const lastPos = mouseTrail[mouseTrail.length - 2];
+                const currentPos = mouseTrail[mouseTrail.length - 1];
+                const distance = Math.sqrt(
+                    Math.pow(currentPos.x - lastPos.x, 2) +
+                    Math.pow(currentPos.y - lastPos.y, 2)
+                );
+                const timeDiff = currentPos.time - lastPos.time;
+                const speed = distance / timeDiff;
+
+                // Nếu di chuyển nhanh, tạo pháo hoa (giảm tần suất trên mobile)
+                const threshold = window.innerWidth <= 768 ? 0.7 : 0.5;
+                const probability = window.innerWidth <= 768 ? 0.2 : 0.3;
+
+                if (speed > threshold && Math.random() < probability) {
+                    createFirework(e.clientX, e.clientY);
+                }
+            }
+
+            isMouseMoving = true;
+            clearTimeout(mouseTimeout);
+            mouseTimeout = setTimeout(() => {
+                isMouseMoving = false;
+            }, 100);
+        });
+
+        // Tạo pháo hoa khi click (chỉ khi không click vào popup)
+        document.addEventListener('click', (e) => {
+            // Chỉ tạo pháo hoa khi không click vào popup
+            if (e.target.id !== 'wish-popup' && !e.target.closest('#wish-popup')) {
+                createFirework(e.clientX, e.clientY);
+
+                // Tạo thêm một vài pháo hoa xung quanh (ít hơn trên mobile)
+                const extraFireworks = window.innerWidth <= 768 ? 1 : 2;
+                for (let i = 0; i < extraFireworks; i++) {
+                    setTimeout(() => {
+                        createFirework(
+                            e.clientX + (Math.random() - 0.5) * 80,
+                            e.clientY + (Math.random() - 0.5) * 80
+                        );
+                    }, (i + 1) * 100);
+                }
+            }
+        });
+
+        // Enhanced touch events cho mobile
+        let touchStartTime = 0;
+        let touchStartPos = { x: 0, y: 0 };
+        let isLongPress = false;
+        let longPressTimeout;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartTime = Date.now();
+            const touch = e.touches[0];
+            touchStartPos = { x: touch.clientX, y: touch.clientY };
+            isLongPress = false;
+
+            // Long press detection
+            longPressTimeout = setTimeout(() => {
+                isLongPress = true;
+                // Tạo hiệu ứng đặc biệt cho long press
+                if (e.target.id !== 'wish-popup' && !e.target.closest('#wish-popup')) {
+                    createFirework(touch.clientX, touch.clientY);
+                    // Tạo thêm pháo hoa cho long press
+                    setTimeout(() => createFirework(touch.clientX + 30, touch.clientY), 100);
+                    setTimeout(() => createFirework(touch.clientX - 30, touch.clientY), 200);
+                }
+            }, 500);
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            // Cancel long press if finger moves
+            const touch = e.touches[0];
+            const moveDistance = Math.sqrt(
+                Math.pow(touch.clientX - touchStartPos.x, 2) +
+                Math.pow(touch.clientY - touchStartPos.y, 2)
+            );
+
+            if (moveDistance > 10) {
+                clearTimeout(longPressTimeout);
+                isLongPress = false;
+            }
+        });
+
+        document.addEventListener('touchend', (e) => {
+            clearTimeout(longPressTimeout);
+            const touchDuration = Date.now() - touchStartTime;
+
+            if (!isLongPress && touchDuration < 200) { // Quick tap
+                const touch = e.changedTouches[0];
+                if (e.target.id !== 'wish-popup' && !e.target.closest('#wish-popup')) {
+                    createFirework(touch.clientX, touch.clientY);
+                }
+            }
+        });
+
+        // Enhanced performance optimization
+        let isLowPerformance = false;
+        let frameCount = 0;
+        let lastTime = performance.now();
+        let performanceLevel = 'high'; // high, medium, low
+
+        function checkPerformance() {
+            frameCount++;
+            const currentTime = performance.now();
+            if (currentTime - lastTime >= 1000) {
+                const fps = Math.round((frameCount * 1000) / (currentTime - lastTime));
+
+                // Adaptive performance levels
+                if (fps < 20) {
+                    performanceLevel = 'low';
+                    isLowPerformance = true;
+                    // Giảm mạnh hiệu ứng
+                    stars = stars.filter((_, i) => i % 3 === 0);
+                    meteors = meteors.filter((_, i) => i % 2 === 0);
+                } else if (fps < 40) {
+                    performanceLevel = 'medium';
+                    // Giảm vừa phải
+                    if (Math.random() < 0.3) {
+                        stars = stars.filter((_, i) => i % 2 === 0);
+                    }
+                } else {
+                    performanceLevel = 'high';
+                    isLowPerformance = false;
+                }
+
+                frameCount = 0;
+                lastTime = currentTime;
+            }
+        }
+
+        // Device capability detection
+        function getDeviceCapability() {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
+            // Check if WebGL is supported
+            const hasWebGL = !!gl;
+
+            // Check memory (approximate)
+            const memory = navigator.deviceMemory || 4; // Default 4GB if not available
+
+            // Check CPU cores
+            const cores = navigator.hardwareConcurrency || 4;
+
+            // Mobile device detection
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+            // Calculate capability score
+            let score = 100;
+            if (isMobile) score -= 30;
+            if (!hasWebGL) score -= 20;
+            if (memory < 4) score -= 20;
+            if (cores < 4) score -= 15;
+            if (window.innerWidth < 768) score -= 10;
+
+            return {
+                score,
+                level: score > 70 ? 'high' : score > 40 ? 'medium' : 'low',
+                isMobile,
+                hasWebGL,
+                memory,
+                cores
+            };
+        }
+
+        // Initialize based on device capability
+        const deviceCap = getDeviceCapability();
+        console.log('Device capability:', deviceCap);
+
+        // Adjust initial settings based on device
+        if (deviceCap.level === 'low') {
+            stars = stars.filter((_, i) => i % 2 === 0);
+            performanceLevel = 'low';
+        } else if (deviceCap.level === 'medium') {
+            if (Math.random() < 0.5) {
+                stars = stars.filter((_, i) => i % 3 !== 0);
+            }
+            performanceLevel = 'medium';
+        }
+
+        // Enhanced loop with performance monitoring
+        const originalLoop = loop;
+        loop = function () {
+            checkPerformance();
+            originalLoop();
+        };
+
+        // Adaptive quality settings
+        function getAdaptiveSettings() {
+            return {
+                maxFireworkParticles: performanceLevel === 'high' ? 12 : performanceLevel === 'medium' ? 8 : 6,
+                maxSparks: performanceLevel === 'high' ? 8 : performanceLevel === 'medium' ? 5 : 3,
+                maxWishParticles: performanceLevel === 'high' ? 15 : performanceLevel === 'medium' ? 10 : 6,
+                animationDuration: performanceLevel === 'high' ? 1000 : performanceLevel === 'medium' ? 800 : 600
+            };
+        }
+
+        // Update createFirework to use adaptive settings
+        const originalCreateFirework = createFirework;
+        createFirework = function (x, y) {
+            const settings = getAdaptiveSettings();
+            const colors = [
+                '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4',
+                '#ffeaa7', '#dda0dd', '#98d8c8', '#f7b731',
+                '#ff7675', '#74b9ff', '#a29bfe', '#fd79a8'
+            ];
+
+            // Adaptive particle count
+            const particleCount = Math.min(
+                settings.maxFireworkParticles,
+                window.innerWidth <= 768 ? 8 : 12
+            );
+
+            // Create firework particles with adaptive settings
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'firework-particle';
+
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.backgroundColor = color;
+                particle.style.boxShadow = `0 0 10px ${color}`;
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+
+                const angle = (i / particleCount) * Math.PI * 2;
+                const velocity = window.innerWidth <= 768 ? 30 + Math.random() * 60 : 50 + Math.random() * 100;
+                const endX = x + Math.cos(angle) * velocity;
+                const endY = y + Math.sin(angle) * velocity;
+
+                document.body.appendChild(particle);
+
+                particle.animate([
+                    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                    { transform: `translate(${endX - x}px, ${endY - y}px) scale(0.3)`, opacity: 0 }
+                ], {
+                    duration: settings.animationDuration + Math.random() * 400,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                });
+
+                setTimeout(() => {
+                    if (particle.parentNode) {
+                        particle.parentNode.removeChild(particle);
+                    }
+                }, settings.animationDuration + 400);
+            }
+
+            // Create sparks with adaptive count
+            const sparkCount = Math.min(settings.maxSparks, window.innerWidth <= 768 ? 5 : 8);
+            for (let i = 0; i < sparkCount; i++) {
+                setTimeout(() => {
+                    createSpark(x + (Math.random() - 0.5) * 20, y + (Math.random() - 0.5) * 20);
+                }, Math.random() * 200);
+            }
+        };
+    </script>
+</body>
+
+</html>
