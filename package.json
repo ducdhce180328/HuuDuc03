@@ -1,0 +1,17 @@
+﻿{
+  "name": "trung-thu-website",
+  "version": "1.0.0",
+  "description": "Website Trung Thu với hiệu ứng tương tác",
+  "main": "index_fixed.html",
+  "scripts": {
+    "start": "serve -s .",
+    "build": "echo 'Build complete'",
+    "dev": "serve -s . -l 3000"
+  },
+  "keywords": ["trung-thu", "website", "interactive"],
+  "author": "HuuDuc03",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
